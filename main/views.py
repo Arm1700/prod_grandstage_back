@@ -3,12 +3,13 @@ from django.http import HttpResponse
 from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from . import serializers
-
-from rest_framework import generics
+from rest_framework import status, generics
 from .models import Course, Certificate, Event
-from .serializers import CourseSerializer, CertificateSerializer, EventSerializer
+from .serializers import CourseSerializer, CertificateSerializer, EventSerializer, ContactFormSerializer
+import environ
 
+env = environ.Env()
+environ.Env.read_env()
 
 class CertificateDetailView(generics.RetrieveAPIView):
     queryset = Certificate.objects.all()
@@ -48,29 +49,42 @@ def reset_database(request):
 
 
 class ContactFormView(APIView):
-    serializer_class = serializers.ContactFormSerializer
-
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = ContactFormSerializer(data=request.data)
 
         if serializer.is_valid():
-            name = serializer.validated_data['name']
-            email = serializer.validated_data['email']
-            message = serializer.validated_data['message']
-            print(name, email, message)
-            if name and message and email:
-                try:
-                    send_mail(
-                        'Subject here',
-                        f'Name: {name}\nEmail: {email}\nMessage: {message}',
-                        'beglaryan4.arman@gmail.com',
-                        ['bukboks1@gmail.com'],
-                        fail_silently=False
-                    )
-                except BadHeaderError:
-                    return HttpResponse("Invalid header found.")
-                return Response({'message': 'Email sent successfully'}, status=200)
-            else:
-                return HttpResponse("Make sure all fields are entered and valid.")
+            data = serializer.validated_data
+            # Формирование сообщения
+            message = f"""
+            New student registration:
+
+            Student Name: {data['studentName']}
+            Date of Birth: {data['dob']}
+            Address: {data['address']}
+            Primary Phone: {data['primaryPhone']}
+            Secondary Phone: {data['secondaryPhone']}
+            Parent Name: {data['parentName']}
+            Email: {data['email']}
+            Emergency Contact: {data['emergencyContact']}
+            Minor Name: {data['minorName']}
+            Minor Age: {data['minorAge']}
+            Signature: {data['signature']}
+            Date: {data['date']}
+            Zelle: {data.get('Zelle', 'Not provided')}
+            Policies Accepted: {all(data['policies'])}
+            Waiver Accepted: {data['waiver']}
+            """
+
+            # Отправка email
+            try:
+                send_mail(
+                    subject="New Student Registration",
+                    message=message,
+                    from_email=env('EMAIL_HOST_USER'),
+                    recipient_list=["beglaryan4.arman@gmail.com"],
+                )
+                return Response({'message': 'Registration submitted successfully.'}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({'error': f'Email error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
-            return Response(serializer.errors, status=400)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Gallery, Event, Outcome, EventGallery
+from .models import Course, Gallery, Event,  EventGallery
 
 
 class CertificateSerializer(serializers.ModelSerializer):
@@ -10,11 +10,19 @@ class CertificateSerializer(serializers.ModelSerializer):
 
 class EventGallerySerializer(serializers.ModelSerializer):
     event_gallery_name = serializers.CharField(source='event.name', read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = EventGallery
-        fields = ['id', 'event', 'event_gallery_name', 'img', 'order']
+        fields = ['id', 'event', 'event_gallery_name', 'image', 'order']
 
+
+    def get_image(self):
+        if self.local_image:
+            return self.local_image.url
+        elif self.image_url:
+            return self.image_url
+        return None
 
 class GallerySerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='category.name', read_only=True)
@@ -24,46 +32,17 @@ class GallerySerializer(serializers.ModelSerializer):
         fields = ['id', 'course', 'course_name', 'img', 'order']
 
 
-class OutcomeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Outcome
-        fields = ['id', 'text', 'order']
-
 
 class EventSerializer(serializers.ModelSerializer):
-    outcomes = OutcomeSerializer(many=True, required=False)
-    event_galleries = EventGallerySerializer(many=True,  required=False)
+    available_slots = serializers.ReadOnlyField()
+    event_galleries = EventGallerySerializer(many=True, required=False)
 
     class Meta:
         model = Event
-        fields = ['id', 'day', 'month', 'title', 'hour', 'place', 'event_description', 'description', 'image', 'status',
-                  'order', 'outcomes', 'event_galleries']
+        fields = (
 
-    def create(self, validated_data):
-        outcomes_data = validated_data.pop('outcomes', [])
-        event = Event.objects.create(**validated_data)
-        for outcome_data in outcomes_data:
-            Outcome.objects.create(event=event, **outcome_data)
-        return event
-
-    def update(self, instance, validated_data):
-        outcomes_data = validated_data.pop('outcomes', [])
-        instance.title = validated_data.get('title', instance.title)
-        instance.save()
-
-        # Обновите или создайте результаты
-        for outcome_data in outcomes_data:
-            outcome_id = outcome_data.get('id', None)
-            if outcome_id:
-                outcome = Outcome.objects.get(id=outcome_id, event=instance)
-                outcome.text = outcome_data.get('text', outcome.text)
-                outcome.order = outcome_data.get('order', outcome.order)
-                outcome.save()
-            else:
-                Outcome.objects.create(event=instance, **outcome_data)
-
-        return instance
-
+            'id', 'start_date', 'end_date', 'status', 'image', 'available_slots',
+            'order', 'event_galleries', 'translations')
 
 class CourseSerializer(serializers.ModelSerializer):
     galleries = GallerySerializer(many=True, source='gallery_set')
@@ -74,6 +53,20 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class ContactFormSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=100)
-    email = serializers.EmailField()
-    message = serializers.CharField()
+    studentName = serializers.CharField(max_length=255, required=True)
+    dob = serializers.DateField(required=True)
+    address = serializers.CharField(max_length=500, required=True)
+    primaryPhone = serializers.RegexField(regex=r'^\+?\d+$', required=True)
+    secondaryPhone = serializers.RegexField(regex=r'^\+?\d+$', required=False, allow_blank=True)
+    parentName = serializers.CharField(max_length=255, required=True)
+    email = serializers.EmailField(required=True)
+    emergencyContact = serializers.CharField(max_length=255, required=True)
+    minorName = serializers.CharField(max_length=255, required=True)
+    minorAge = serializers.IntegerField(required=True)
+    signature = serializers.CharField(max_length=255, required=True)
+    date = serializers.DateField(required=True)
+    Zelle = serializers.CharField(max_length=20, required=False)
+    policies = serializers.ListField(
+        child=serializers.BooleanField(), required=True
+    )
+    waiver = serializers.BooleanField(required=True)

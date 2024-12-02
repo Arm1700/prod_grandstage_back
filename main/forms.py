@@ -36,8 +36,4 @@ class EventGalleryForm(forms.ModelForm):
 
     class Meta:
         model = Event  # Targeting the Course model for the form
-        fields = ['day', 'month', 'title', 'hour', 'place', 'event_description', 'description', 'image', 'status',
-                  'order']  # Fields for Course
-        widgets = {
-            'images': MultipleFileInput(),
-        }
+        fields = '__all__' # Fields for Course

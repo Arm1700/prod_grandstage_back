@@ -1,37 +1,34 @@
 from adminsortable.models import SortableMixin
 from django.db import models
+from datetime import date
 
+STATUS_CHOICES_EVENT = [
+    ('upcoming', 'Upcoming'),
+    ('happening', 'Happening'),
+    ('completed', 'Completed'),
+]
+STATUS_CHOICES = [
+    ('January', 'January'),
+    ('February', 'February'),
+    ('March', 'March'),
+    ('April', 'April'),
+    ('May', 'May'),
+    ('June', 'June'),
+    ('July', 'July'),
+    ('August', 'August'),
+    ('September', 'September'),
+    ('October', 'October'),
+    ('November', 'November'),
+    ('December', 'December'),
+]
 
 class Event(models.Model):
-    STATUS_CHOICES = [
-        ('upcoming', 'Upcoming'),
-        ('happening', 'Happening'),
-        ('completed', 'Completed'),
-    ]
-    MONTH_CHOICES = [
-        ('January', 'January'),
-        ('February', 'February'),
-        ('March', 'March'),
-        ('April', 'April'),
-        ('May', 'May'),
-        ('June', 'June'),
-        ('July', 'July'),
-        ('August', 'August'),
-        ('September', 'September'),
-        ('October', 'October'),
-        ('November', 'November'),
-        ('December', 'December'),
-    ]
-    day = models.PositiveIntegerField()
-    month = models.CharField(max_length=20, choices=MONTH_CHOICES)
     title = models.CharField(max_length=100)
-    hour = models.CharField(max_length=50)
-    place = models.CharField(max_length=100)
-    event_description = models.TextField()
-    description = models.TextField()
-    image = models.ImageField(upload_to='event_gallery_photos/', blank=True, null=True)
+    start_date = models.DateField(default=date.today)
+    end_date = models.DateField(default=date.today)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES_EVENT)
+    image = models.ImageField(upload_to='event_gallery_photos/', blank=True, null=True)
 
     class Meta:
         ordering = ['order']
@@ -39,16 +36,12 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)  # Ensure the base save is called
-        images = form.cleaned_data.get('img', [])
-        for image in images:
-            EventGallery.objects.create(course=obj, img=image)
-
 
 class EventGallery(models.Model):
     event = models.ForeignKey(Event,related_name='event_galleries', on_delete=models.CASCADE)
-    img = models.ImageField(upload_to='event-gallery_photos/', blank=True, null=True)
+    local_image = models.ImageField(upload_to='event_gallery_images/', blank=True, null=True)
+    image_url = models.URLField(default='https://eduma.thimpress.com/wp-content/uploads/2022/07/thumnail-cate-7'
+                                        '-170x170.png', max_length=255, blank=True, null=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
 
     class Meta:
@@ -57,17 +50,12 @@ class EventGallery(models.Model):
     def __str__(self):
         return f"Event gallery {self.id} - {self.event.title}" if self.event else "Event Gallery"
 
-
-class Outcome(models.Model):
-    event = models.ForeignKey(Event, related_name='outcomes', on_delete=models.CASCADE)
-    text = models.TextField()
-    order = models.PositiveIntegerField(default=0, blank=True, null=True)
-
-    class Meta:
-        ordering = ['order']
-
-    def __str__(self):
-        return self.text
+    def get_image(self):
+        if self.local_image:
+            return self.local_image.url
+        elif self.image_url:
+            return self.image_url
+        return None
 
 
 class Course(models.Model):
@@ -110,4 +98,5 @@ class Certificate(models.Model):
 
     def __str__(self):
         return f"Certificate {self.id} "
+
 
