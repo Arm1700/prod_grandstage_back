@@ -17,11 +17,12 @@ class EventGallerySerializer(serializers.ModelSerializer):
         fields = ['id', 'event', 'event_gallery_name', 'image', 'order']
 
 
-    def get_image(self):
-        if self.local_image:
-            return self.local_image.url
-        elif self.image_url:
-            return self.image_url
+    def get_image(self, obj):
+        # Используем `obj` для доступа к полям модели
+        if obj.local_image:
+            return obj.local_image.url
+        elif obj.image_url:
+            return obj.image_url
         return None
 
 class GallerySerializer(serializers.ModelSerializer):
@@ -41,8 +42,8 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = (
 
-            'id', 'start_date', 'end_date', 'status', 'image', 'available_slots',
-            'order', 'event_galleries', 'translations')
+            'id', 'start_date', 'end_date', 'title','description','place','status', 'image', 'available_slots',
+            'order', 'event_galleries')
 
 class CourseSerializer(serializers.ModelSerializer):
     galleries = GallerySerializer(many=True, source='gallery_set')

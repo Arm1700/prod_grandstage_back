@@ -50,9 +50,9 @@ class GalleryAdmin(admin.ModelAdmin):
 class EventAdmin(SortableAdminMixin, admin.ModelAdmin):
     inlines = [EventGalleryInline]
     form = EventGalleryForm
-    list_display = ('id', 'title', 'start_date', 'end_date', 'status', 'order')
+    list_display = ('id', 'title','description','place', 'start_date', 'end_date', 'status', 'order')
     field = '__all__'
-    search_fields = ['title', 'event_description']
+    search_fields = ['title', 'description']
     list_filter = ['status']
     ordering = ['order']
 
