@@ -36,7 +36,8 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 SECRET_KEY = 'django-insecure-nd4@2&krvk$n8w%r=3+gqj7h^kc)a(3kz#2dr%+anvgflsj9f1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = False
 
 SITE_ID = 1
 ALLOWED_HOSTS = ['*']
@@ -60,14 +61,15 @@ INSTALLED_APPS = [
     'adminsortable2',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'https://grandstage.gekoeducation.com',
-    'http://127.0.0.1:8000',
+CSRF_TRUSTED_ORIGINS = [
+    'https://grandeducationalcenter.com',
+    'https://www.grandeducationalcenter.com',  # если нужно добавить с www
 ]
 
+
 CSRF_TRUSTED_ORIGINS = [
-    'https://grandstage.gekoeducation.com',
-    'http://127.0.0.1:8000',
+    'https://grandeducationalcenter.com',
+    'https://www.grandeducationalcenter.com',  # если нужно добавить с www
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
