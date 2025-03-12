@@ -117,6 +117,9 @@ WSGI_APPLICATION = 'school.wsgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
 }
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
